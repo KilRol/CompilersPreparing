@@ -1,0 +1,4 @@
+1 LET A = B
+2 LET Z9 = 0
+3 LET Z8 = 0
+4 LET B = A
