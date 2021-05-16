@@ -5,7 +5,7 @@
 using namespace std;
 
 enum States { s_A1, s_A2, s_A3, s_A4, s_Exit };
-enum SymbolicTokenClass { CONST_0, CONST_1, ERROR, ENDMARK, ENDFILE };
+enum SymbolicTokenClass { LETTER, CONST_0, CONST_1, SPACE, ERROR, ENDMARK, ENDFILE };
 
 struct SymbolicToken {
     SymbolicTokenClass token_class;
@@ -54,12 +54,23 @@ private:
         SymbolicToken s;
         if (ch == '0') {
             s.token_class = CONST_0;
+            s.value = 0;
         }
         else if (ch == '1') {
             s.token_class = CONST_1;
+            s.value = 1;
+        }
+        else if (isalpha(ch)) {
+            s.token_class = LETTER;
+            s.value = ch;
+        }
+        else if (ch == 32) {
+            s.token_class = SPACE;
+            s.value = ch;
         }
         else if (ch == EOF || ch == 0) {
             s.token_class = ENDFILE;
+            s.value = ch;
         }
         else {
             s.token_class = ERROR;
@@ -254,6 +265,60 @@ private:
         return Exit();
     }
 
+    map<int, map<int, function_pointer>> table_3_1 = {
+           {s_A1, {{LETTER, &Parser::A2a}, {SPACE, &Parser::A1},   {ERROR,&Parser::ERR_IN},    {ENDFILE, &Parser::Exit}  }},
+           {s_A2, {{LETTER, &Parser::M1},                          {ERROR, &Parser::ERR_IN}                              }},
+           {s_A3, {                        {SPACE, &Parser::A1},   {ERROR, &Parser::ERR_IN},   {ENDFILE,&Parser::Exit}   }}
+    };
+
+    int pos;
+
+    int init_vector[26] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 };
+
+    int A2a()
+    {
+        pos = init_vector[s.value - 'a'];
+        if (pos == 0)
+        {
+            return ERR();
+        }
+        return A2();
+    }
+    int A2b()
+    {
+        pos++;
+        return A2();
+    }
+
+    int M1()
+    {
+        if (table_search[pos].letter == s.value)
+        {
+            return (this->*table_search[pos].f)();
+        }
+        else
+        {
+            pos = table_search[pos].alt;
+            if (pos == 0)
+            {
+                return ERR();
+            }
+            else
+            {
+                return M1();
+            }
+        }
+    }
+
+    struct SearchTableClass
+    {
+        char letter;
+        int alt;
+        function_pointer f;
+    };
+
+    SearchTableClass table_search[13];
+
 public:
     Parser() {
         stickyStack.push(-1);
@@ -267,7 +332,24 @@ public:
                 {6, table_2_2},
                 {7, table_2_3},
                 {8, table_2_4},
+                {9, table_3_1},
         };
+
+        //step
+        table_search[1].letter = 't';   table_search[1].f = &Parser::A2b;   table_search[1].alt = 8;
+        table_search[2].letter = 'e';   table_search[2].f = &Parser::A2b;   table_search[2].alt = 4;
+        table_search[3].letter = 'p';   table_search[3].f = &Parser::A3;
+        //string
+        table_search[4].letter = 'r';   table_search[4].f = &Parser::A2b;
+        table_search[5].letter = 'i';   table_search[5].f = &Parser::A2b;
+        table_search[6].letter = 'n';   table_search[6].f = &Parser::A2b;
+        table_search[7].letter = 'g';   table_search[7].f = &Parser::A3;
+        //switch
+        table_search[8].letter = 'w';   table_search[8].f = &Parser::A2b;
+        table_search[9].letter = 'i';   table_search[9].f = &Parser::A2b;
+        table_search[10].letter = 't';  table_search[10].f = &Parser::A2b;
+        table_search[11].letter = 'c';  table_search[11].f = &Parser::A2b;
+        table_search[12].letter = 'h';  table_search[12].f = &Parser::A3;
     }
 
     void parse(string str, int pointer) {
