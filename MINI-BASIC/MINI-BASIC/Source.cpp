@@ -13,22 +13,43 @@ enum class State {
 enum class SymbolicTokenClass { 
 	Letter, Digit, Arithmet, Relation, OpenBracket, ClosedBracket, Point, Space, LF, Error, EndOfFile 
 };
+enum class LexemeTokenClass {
+	LINE, OPERAND, RELATION, NEXT, LET, FOR, GOTO, GOSUB, OPENBRACKET, CLOSEDBRACKET, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, ARITHMET
+};
 
+enum class AtomSet {
+	FINIS, LINEN, ASSIGN, JUMP, JUMPSAVE, RETURNJUMP, CONDJUMP, SAVE, LABEL, TEST, INCR, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
+};
 
+enum class GrammarTokenClass {
+	program, program_body, step_part, more_lines, expression, term, factor, primary, E_list, T_list, F_list, REL_OPERATOR, NEXT, GOTO, RIGHT_PAREN, END, TO, delta, ASSIGN, CONDJUMP, SAVE, LABEL, TEST, CHECK, INCR, JUMP, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
+};
 
-string symbols[]{ "Letter", "Digit", "Arithmetic", "Relation", "OpenBracket", "ClosedBracket", "Point", "Space", "LF", "Error", "EndOfFile" };
+enum class SyntaxTokenClass {
+	LINE, OPERAND, REL_OPERATOR, NEXT, ASSIGN, FOR, GOTO, GOSUB, LEFT_PAREN, RIGHT_PAREN, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, PLUS, NEG, MULT, DIV, EXP
+};
+
+typedef SymbolicTokenClass Symbol;
+typedef LexemeTokenClass Lexeme;
+typedef GrammarTokenClass G;
+typedef SyntaxTokenClass S;
+
+string symbols[] { 
+	"Letter", "Digit", "Arithmetic", "Relation", "OpenBracket", "ClosedBracket", "Point", "Space", "LF", "Error", "EndOfFile" 
+};
+
+string LexemeTokenClassName[] {
+	"LINE", "OPERAND", "RELATION", "NEXT", "LET", "FOR", "GOTO", "GOSUB", "OPENBRACKET", "CLOSEDBRACKET", "IF", "RETURN", "END", "TO", "STEP", "COMMENT", "ERROR", "ENDMARK", "ARITHMET"
+};
+
+string AtomSetName[]{
+	"FINIS\t", "LINEN\t", "ASSIGN\t", "JUMP\t", "JUMPSAVE", "RETURNJUMP", "CONDJUMP", "SAVE\t", "LABEL\t", "TEST\t", "INCR\t", "ADD\t", "SUBT\t", "MULT\t", "DIV\t", "EXP\t", "PLUS\t", "NEG\t"
+};
+
 
 struct SymbolicToken {
 	SymbolicTokenClass type;
 	int value;
-};
-
-enum LexemeTokenClass {
-	LINE, OPERAND, RELATION, NEXT, LET, FOR, GOTO, GOSUB, OPENBRACKET, CLOSEDBRACKET, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, ARITHMET
-};
-
-string LexemeTokenClassName[]{ 
-	"LINE", "OPERAND", "RELATION", "NEXT", "LET", "FOR", "GOTO", "GOSUB", "OPENBRACKET", "CLOSEDBRACKET", "IF", "RETURN", "END", "TO", "STEP", "COMMENT", "ERROR", "ENDMARK", "ARITHMET"
 };
 
 struct LexemeToken {
@@ -37,13 +58,13 @@ struct LexemeToken {
 	void* value;
 
 	friend ostream& operator<<(ostream& os, const LexemeToken& lexeme) {
-		os << " " << lexeme.line << '\t' << LexemeTokenClassName[lexeme.type] << "\t\t\t";
-		if (lexeme.type == RELATION) {
+		os << " " << lexeme.line << '\t' << LexemeTokenClassName[(int)lexeme.type] << "\t\t";
+		if (lexeme.type == Lexeme::RELATION) {
 			os << *(int*)lexeme.value;
-		}if (lexeme.type == ARITHMET) {
+		}if (lexeme.type == Lexeme::ARITHMET) {
 			os << *(int*)lexeme.value;
 		}
-		if (lexeme.type == LINE || lexeme.type == OPERAND || lexeme.type == NEXT || lexeme.type == LET || lexeme.type == FOR || lexeme.type == GOTO || lexeme.type == GOSUB) {
+		if (lexeme.type == Lexeme::LINE || lexeme.type == Lexeme::OPERAND || lexeme.type == Lexeme::NEXT || lexeme.type == Lexeme::LET || lexeme.type == Lexeme::FOR || lexeme.type == Lexeme::GOTO || lexeme.type == Lexeme::GOSUB) {
 			os << lexeme.value;
 		}
 
@@ -59,10 +80,12 @@ struct Variable
 	Variable() : name(), isConst(true), value(0) {}
 	Variable(bool a, double b) : isConst(a), value(b) {}
 	Variable(string N) : name(N), isConst(false), value(0) {}
+	friend ostream& operator<<(ostream& os, Variable v) {
+		cout << "ConstFlag: " << v.isConst << "\tName: " << v.name << "\tValue: " << v.value;
+	}
 };
 
 list<LexemeToken> LexemeList;
-
 vector<Variable*> tableName;
 vector<Variable*> tableConst;
 vector<int*> tableLabel;
@@ -72,15 +95,11 @@ class Parser
 private:
 	SymbolicToken s;
 	typedef State(Parser::* function_pointer)();
-	typedef SymbolicTokenClass Symbol;
 	map<State, map<SymbolicTokenClass, function_pointer>> automata;
 
 	LexemeToken l;
 	LexemeTokenClass lexemeType;
 	void* ptr;
-
-
-
 
 	int value;
 	int rel;
@@ -89,7 +108,7 @@ private:
 	int real_line;
 
 	int line;
-	int pos = -1;
+	int pos;
 
 	string name;
 	bool isVariable;
@@ -230,7 +249,7 @@ private:
 		return State::H1;
 	}
 	State Error1() {
-		lexemeType = ERROR;
+		lexemeType = Lexeme::ERROR;
 		CreateLexeme();
 		return State::G1;
 	}
@@ -257,7 +276,7 @@ private:
 	}
 
 	State A2a() {
-		lexemeType = ARITHMET;
+		lexemeType = Lexeme::ARITHMET;
 		return A2b();
 	}
 	State A2b() {
@@ -285,7 +304,7 @@ private:
 		return A2a();
 	}
 	State A2h() {
-		lexemeType = OPENBRACKET;
+		lexemeType = Lexeme::OPENBRACKET;
 		CreateLexeme();
 		return A2();
 	}
@@ -334,23 +353,23 @@ private:
 		return A2b();
 	}
 	State A2q() {
-		lexemeType = END;
+		lexemeType = Lexeme::END;
 		return A2b();
 	}
 	State A2r() {
-		lexemeType = IF;
+		lexemeType = Lexeme::IF;
 		return A2b();
 	}
 	State A2s() {
-		lexemeType = RETURN;
+		lexemeType = Lexeme::RETURN;
 		return A2b();
 	}
 	State A2t() {
-		lexemeType = STEP;
+		lexemeType = Lexeme::STEP;
 		return A2b();
 	}
 	State A2u() {
-		lexemeType = TO;
+		lexemeType = Lexeme::TO;
 		return A2b();
 	}
 
@@ -360,7 +379,7 @@ private:
 		return A3();
 	}
 	State A3b() {
-		lexemeType = CLOSEDBRACKET;
+		lexemeType = Lexeme::CLOSEDBRACKET;
 		CreateLexeme();
 		return A3();
 	}
@@ -411,12 +430,12 @@ private:
 	}
 
 	State C1a() {
-		lexemeType = NEXT;
+		lexemeType = Lexeme::NEXT;
 		return C1();
 	}
 
 	State C2a() {
-		lexemeType = OPERAND;
+		lexemeType = Lexeme::OPERAND;
 		return C2d();
 	}
 	State C2b() {
@@ -430,7 +449,7 @@ private:
 	}
 
 	State D1a() {
-		lexemeType = OPERAND;
+		lexemeType = Lexeme::OPERAND;
 		num = value;
 		return D1();
 	}
@@ -495,18 +514,18 @@ private:
 	}
 
 	State E1a() {
-		lexemeType = GOTO;
+		lexemeType = Lexeme::GOTO;
 		lineFlag = false;
 		return E1();
 	}
 	State E1b() {
-		lexemeType = GOSUB;
+		lexemeType = Lexeme::GOSUB;
 		lineFlag = false;
 		return E1();
 	}
 
 	State E2a() {
-		lexemeType = LINE;
+		lexemeType = Lexeme::LINE;
 		lineFlag = true;
 		return E2b();
 	}
@@ -526,11 +545,11 @@ private:
 	}
 
 	State F1a() {
-		lexemeType = LET;
+		lexemeType = Lexeme::LET;
 		return F1();
 	}
 	State F1b() {
-		lexemeType = FOR;
+		lexemeType = Lexeme::FOR;
 		return F1();
 	}
 
@@ -546,14 +565,14 @@ private:
 	}
 
 	State G1a() {
-		lexemeType = COMMENT;
+		lexemeType = Lexeme::COMMENT;
 		CreateLexeme();
 		return G1();
 	}
 
 	State H1a() {
 		rel = value;
-		lexemeType = RELATION;
+		lexemeType = Lexeme::RELATION;
 		return H1();
 	}
 	State H1b() {
@@ -604,16 +623,6 @@ private:
 		return B1b();
 	}
 	void YES1E() {
-		/*int pointer = line % 101;
-		for (int i : ListPointerTable[pointer]) {
-			if (i == line) {
-				ptr = &ListPointerTable[pointer];
-				return;
-			}
-		}
-		ListPointerTable[pointer].push_front(line);
-		ptr = &ListPointerTable[pointer];*/
-
 		for (int* v : tableLabel) {
 			if (v == &line) {
 				ptr = v;
@@ -622,7 +631,6 @@ private:
 		}
 		tableLabel.push_back(new int(line));
 		ptr = tableLabel.back();
-
 	}
 
 	void YES1D() {
@@ -641,7 +649,7 @@ private:
 		AddConst();
 	}
 	State Exit1() {
-		lexemeType = ENDMARKER;
+		lexemeType = Lexeme::ENDMARKER;
 		CreateLexeme();
 		return State::Exit;
 	}
@@ -675,17 +683,15 @@ private:
 			AddVariable();
 		}
 
-		if (lexeme.type == RELATION) {
+		if (lexeme.type == Lexeme::RELATION) {
 			lexeme.value = new int(rel);
 		}
-		if (lexeme.type == ARITHMET) {
+		if (lexeme.type == Lexeme::ARITHMET) {
 			lexeme.value = new int(value);
 		}
-
-		if (lexeme.type == LINE || lexeme.type == OPERAND || lexeme.type == NEXT || lexeme.type == LET || lexeme.type == FOR || lexeme.type == GOTO || lexeme.type == GOSUB) {
+		if (lexeme.type == Lexeme::LINE || lexeme.type == Lexeme::OPERAND || lexeme.type == Lexeme::NEXT || lexeme.type == Lexeme::LET || lexeme.type == Lexeme::FOR || lexeme.type == Lexeme::GOTO || lexeme.type == Lexeme::GOSUB) {
 			lexeme.value = ptr;
 		}
-
 
 		LexemeList.push_back(lexeme);
 	}
@@ -769,8 +775,7 @@ public:
 			{State::F2,	{									{Symbol::Digit, &Parser::F3a},										{Symbol::Relation, &Parser::A2o},																													{Symbol::Space, &Parser::F2},																	}},
 			{State::F3,	{																										{Symbol::Relation, &Parser::A2o},																													{Symbol::Space, &Parser::F3},																	}},
 			{State::G1,	{{Symbol::Letter, &Parser::G1},		{Symbol::Digit, &Parser::G1},	{Symbol::Arithmet, &Parser::G1},	{Symbol::Relation, &Parser::G1},	{Symbol::OpenBracket, &Parser::G1},		{Symbol::ClosedBracket, &Parser::G1},	{Symbol::Point, &Parser::G1},	{Symbol::Space, &Parser::G1},	{Symbol::LF, &Parser::A1},	{Symbol::EndOfFile, &Parser::Exit1}	}},
-			{State::H1,	{{Symbol::Letter, &Parser::C2b},	{Symbol::Digit, &Parser::D1c},	{Symbol::Arithmet, &Parser::A2g},	{Symbol::Relation, &Parser::A2p},	{Symbol::OpenBracket, &Parser::A2k},	{Symbol::ClosedBracket, &Parser::A3c},	{Symbol::Point, &Parser::D6a},	{Symbol::Space, &Parser::H1},	{Symbol::LF, &Parser::A1a},	{Symbol::EndOfFile, &Parser::Exit2}	}},
-
+			{State::H1,	{{Symbol::Letter, &Parser::C2b},	{Symbol::Digit, &Parser::D1c},	{Symbol::Arithmet, &Parser::A2g},	{Symbol::Relation, &Parser::A2p},	{Symbol::OpenBracket, &Parser::A2k},	{Symbol::ClosedBracket, &Parser::A3c},	{Symbol::Point, &Parser::D6a},	{Symbol::Space, &Parser::H1},	{Symbol::LF, &Parser::A1a},	{Symbol::EndOfFile, &Parser::Exit2}	}}
 		};
 
 		searchTable[1].letter = 'N';	searchTable[1].f = &Parser::B1d;
@@ -824,21 +829,9 @@ public:
 	}
 };
 
-enum class AtomSet {
-	FINIS, LINEN, ASSIGN, JUMP, JUMPSAVE, RETURNJUMP, CONDJUMP, SAVE, LABEL, TEST, INCR, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
-};
-
-enum class GrammarTokenClass {
-	program, program_body, step_part, more_lines, expression, term, factor, primary, E_list, T_list, F_list, REL_OPERATOR, NEXT, GOTO, RIGHT_PAREN, END, TO, delta, ASSIGN, CONDJUMP, SAVE, LABEL, TEST, CHECK, INCR, JUMP, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
-};
-
-enum class SyntaxTokenClass {
-	LINE, OPERAND, REL_OPERATOR, NEXT, ASSIGN, FOR, GOTO, GOSUB, LEFT_PAREN, RIGHT_PAREN, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, PLUS, NEG, MULT, DIV, EXP
-};
-
 struct Pointer {
 	void* ptr;
-	Pointer() {};
+	Pointer() { ptr = nullptr; };
 	Pointer(void* p) : ptr(p) {};
 	void setValue(void* ptr) {
 		this->ptr = ptr;
@@ -848,79 +841,6 @@ struct Pointer {
 	}
 };
 
-string AtomSetName[]{
-	"FINIS", "LINEN", "ASSIGN", "JUMP", "JUMPSAVE", "RETURNJUMP", "CONDJUMP"," SAVE", "LABEL", "TEST", "INCR", "ADD", "SUBT", "MULT", "DIV", "EXP", "PLUS", "NEG"
-};
-
-struct Atom {
-	AtomSet type;
-	Pointer* ptr1;
-	Pointer* ptr2;
-	Pointer* ptr3;
-	Pointer* ptr4;
-
-	friend ostream& operator<<(ostream& os, Atom a) {
-		switch (a.type) {
-		case AtomSet::FINIS:
-			os << "FINIS ";
-			break;
-		case AtomSet::LINEN:
-			os << "LINEN\t\t" << *(int*)a.ptr1->getValue() << "\t"<< a.ptr1->getValue();
-			break;
-		case AtomSet::ASSIGN:
-			os << "ASSIGN\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
-			break;
-		case AtomSet::JUMP:
-			os << "JUMP\t\t\t" << a.ptr1->getValue();
-			break;
-		case AtomSet::JUMPSAVE:
-			os << "JUMPSAVE\t\t" << a.ptr1->getValue();
-			break;
-		case AtomSet::RETURNJUMP:
-			os << "RETURNJUMP\t\t";
-			break;
-		case AtomSet::CONDJUMP:
-			os << "CONDJUMP\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue() << '\t' << a.ptr4->getValue();
-			break;
-		case AtomSet::SAVE:
-			os << "SAVE\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
-			break;
-		case AtomSet::LABEL:
-			os << "LABEL\t\t\t" << a.ptr1->getValue();
-			break;
-		case AtomSet::TEST:
-			os << "TEST\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue() << '\t' << a.ptr4->getValue();
-			break;
-		case AtomSet::INCR:
-			os << "INCR\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
-			break;
-		case AtomSet::ADD:
-			os << "ADD\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
-			break;
-		case AtomSet::SUBT:
-			os << "SUBT\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
-			break;
-		case AtomSet::MULT:
-			os << "MULT\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
-			break;
-		case AtomSet::DIV:
-			os << "DIV\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
-			break;
-		case AtomSet::EXP:
-			os << "EXP\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
-			break;
-		case AtomSet::PLUS:
-			os << "PLUS\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
-			break;
-		case AtomSet::NEG:
-			os << "NEG\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
-			break;
-		}
-
-		return os;
-
-	}
-};
 list<Pointer*> PointerList;
 
 Pointer* getNewPointer() {
@@ -931,6 +851,34 @@ Pointer* getNewPointer(void* ptr) {
 	PointerList.push_back(new Pointer(ptr));
 	return PointerList.back();
 }
+
+struct Atom {
+	AtomSet type;
+	Pointer* ptr1;
+	Pointer* ptr2;
+	Pointer* ptr3;
+	Pointer* ptr4;
+
+	friend ostream& operator<<(ostream& os, Atom a) {
+		os << AtomSetName[(int)a.type] << "\t";
+		if (a.type == AtomSet::LINEN) {
+			os << *(int*)a.ptr1->getValue();
+		}
+		if ((int)a.ptr1 != 0xcccccccc ) {
+			os << "\t"<< a.ptr1->getValue();
+		}
+		if ((int)a.ptr2 != 0xcccccccc) {
+			os << "\t" << a.ptr2->getValue();
+		}
+		if ((int)a.ptr3 != 0xcccccccc) {
+			os << "\t" << a.ptr3->getValue();
+		}
+		if ((int)a.ptr4 != 0xcccccccc) {
+			os << "\t" << a.ptr4->getValue();
+		}
+		return os;
+	}
+};
 
 struct SyntaxElements {
 	GrammarTokenClass type;
@@ -953,37 +901,36 @@ list<void*> interimTable;
 class SyntexAnalyzer {
 private:
 	typedef SyntexAnalyzer SA;
-	typedef GrammarTokenClass G;
-	typedef SyntaxTokenClass S;
 	typedef void(SA::* function_pointer)();
 
 	map<GrammarTokenClass, map<SyntaxTokenClass, function_pointer>> SyntaxBox;
-	SyntaxTokenClass type;
-	stack<SyntaxElements> magazine;
-	
-	bool isExit = false;
-
-	Pointer* line;
 
 	list<LexemeToken>::iterator currentLexeme;
-	
+
+	stack<SyntaxElements> magazine;
+
+	SyntaxTokenClass type;
+	Pointer* line;
+
+	bool isExit = false;
 
 	void* NEWTSR() {
-		return NEWTR();
+		interimTable.push_back(new Pointer()); 
+		return interimTable.back();
 	}
 
 	void* NEWTL() {
-		interimTable.push_back(new void*);
+		interimTable.push_back(new int());
 		return interimTable.back();
 	}
 
 	void* NEWTR() {
-		interimTable.push_back(new void*);
+		interimTable.push_back(new Variable(true, 0));
 		return interimTable.back();
 	}
 
 	void shift() {
-		if (currentLexeme->type == ARITHMET) {
+		if (currentLexeme->type == Lexeme::ARITHMET) {
 			switch (*(int*)currentLexeme->value) {
 			case 1: type = S::PLUS; break;
 			case 2: type = S::NEG;	break;
@@ -991,8 +938,7 @@ private:
 			case 4: type = S::DIV;	break;
 			case 5: type = S::EXP;	break;
 			}
-		}
-		else {
+		} else {
 			type = (SyntaxTokenClass)(currentLexeme->type);
 		}		
 	}
@@ -1542,16 +1488,16 @@ private:
 	void ErrorRoutine(string ErrorMessagePt1, bool f = false, string ErrorMessagePt2 = "") {
 		cout << ErrorMessagePt1;
 			if (f) {
-				cout << LexemeTokenClassName[currentLexeme->type];
+				cout << LexemeTokenClassName[(int)currentLexeme->type];
 			} 
 		cout << ErrorMessagePt2 << endl;
 
 		ErrorFound = true;	
-		while (currentLexeme->type != LINE && currentLexeme->type != ENDMARKER) {
+		while (currentLexeme->type != Lexeme::LINE && currentLexeme->type != Lexeme::ENDMARKER) {
 			currentLexeme++;
 			shift();
 		}
-		if (currentLexeme->type == ENDMARKER) {
+		if (currentLexeme->type == Lexeme::ENDMARKER) {
 			isExit = true;
 			return;
 		}
@@ -1630,17 +1576,6 @@ public:
 		}
 		PrintAtoms();
 	}
-};
-
-enum class TableElementClass {
-	CONSTANT, VARIABLE, PARTIAL_RESULT, SAVED_RESULT, LABEL
-};
-
-struct TableElement {
-	TableElementClass type;
-	void* value;
-	void* adress;
-	int status;
 };
 
 int main() {
