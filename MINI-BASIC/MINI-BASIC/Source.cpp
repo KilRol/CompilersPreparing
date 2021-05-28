@@ -7,11 +7,15 @@
 #include <map>
 using namespace std;
 
-enum State { s_A1, s_A2, s_A3, s_B1, s_C1, s_C2, s_D1, s_D2, s_D3, s_D4, s_D5, s_D6, s_E1, s_E2, s_F1, s_F2, s_F3, s_G1, s_H1, s_Exit };
-enum SymbolicTokenClass { Letter, Digit, Arithmet, Relation, OpenBracket, ClosedBracket, Point, Space, LF, Error, EndOfFile };
-enum LexemeTokenClass { LINE, OPERAND, ARITHMET, RELATION, OPENBRACKET, CLOSEDBRACKET, ERROR, ENDMARKER, NEXT, LET, FOR, GOTO, GOSUB, IF, RETURN, END, TO, STEP, COMMENT, };
+enum class State { 
+	A1, A2, A3, B1, C1, C2, D1, D2, D3, D4, D5, D6, E1, E2, F1, F2, F3, G1, H1, Exit 
+};
+enum class SymbolicTokenClass { 
+	Letter, Digit, Arithmet, Relation, OpenBracket, ClosedBracket, Point, Space, LF, Error, EndOfFile 
+};
 
-string LexemeTokenClassName[]{ "LINE", "OPERAND", "ARITHMET", "RELATION", "OPENBRACKET", "CLOSEDBRACKET", "ERROR", "ENDMARK", "NEXT", "LET", "FOR", "GOTO", "GOSUB",  "IF", "RETURN", "END", "TO", "STEP", "REM" };
+
+
 string symbols[]{ "Letter", "Digit", "Arithmetic", "Relation", "OpenBracket", "ClosedBracket", "Point", "Space", "LF", "Error", "EndOfFile" };
 
 struct SymbolicToken {
@@ -19,6 +23,13 @@ struct SymbolicToken {
 	int value;
 };
 
+enum LexemeTokenClass {
+	LINE, OPERAND, RELATION, NEXT, LET, FOR, GOTO, GOSUB, OPENBRACKET, CLOSEDBRACKET, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, ARITHMET
+};
+
+string LexemeTokenClassName[]{ 
+	"LINE", "OPERAND", "RELATION", "NEXT", "LET", "FOR", "GOTO", "GOSUB", "OPENBRACKET", "CLOSEDBRACKET", "IF", "RETURN", "END", "TO", "STEP", "COMMENT", "ERROR", "ENDMARK", "ARITHMET"
+};
 
 struct LexemeToken {
 	LexemeTokenClass type;
@@ -52,11 +63,16 @@ struct Variable
 
 list<LexemeToken> LexemeList;
 
+vector<Variable*> tableName;
+vector<Variable*> tableConst;
+vector<int*> tableLabel;
+
 class Parser
 {
 private:
 	SymbolicToken s;
 	typedef State(Parser::* function_pointer)();
+	typedef SymbolicTokenClass Symbol;
 	map<State, map<SymbolicTokenClass, function_pointer>> automata;
 
 	LexemeToken l;
@@ -96,46 +112,44 @@ private:
 	int init_vector[26] = { 0, 0, 0, 0, 1, 3, 5, 0, 11, 0, 0, 12, 0, 14, 0, 0, 0, 17, 23, 26, 0, 0, 0, 0, 0, 0 };
 	SearchTableClass searchTable[27];
 
-	vector<Variable*> tableName;
-	vector<Variable*> tableConst;
-
+	
 
 	SymbolicToken transliterator(int ch) {
 		SymbolicToken s;
 		if (isalpha(ch)) {
-			s.type = Letter;
+			s.type = Symbol::Letter;
 			value = ch - 'A';
 		}
 		else if (isdigit(ch)) {
-			s.type = Digit;
+			s.type = Symbol::Digit;
 			value = ch - '0';
 		}
 		else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^') {
-			s.type = Arithmet;
+			s.type = Symbol::Arithmet;
 		}
 		else if (ch == '=' || ch == '!' || ch == '<' || ch == '>') {
-			s.type = Relation;
+			s.type = Symbol::Relation;
 		}
 		else if (ch == '(') {
-			s.type = OpenBracket;
+			s.type = Symbol::OpenBracket;
 		}
 		else if (ch == ')') {
-			s.type = ClosedBracket;
+			s.type = Symbol::ClosedBracket;
 		}
 		else if (ch == '.') {
-			s.type = Point;
+			s.type = Symbol::Point;
 		}
 		else if (ch == 32) {
-			s.type = Space;
+			s.type = Symbol::Space;
 		}
 		else if (ch == 10) {
-			s.type = LF;
+			s.type = Symbol::LF;
 		}
 		else if (ch == EOF) {
-			s.type = EndOfFile;
+			s.type = Symbol::EndOfFile;
 		}
 		else {
-			s.type = Error;
+			s.type = Symbol::Error;
 			s.value = 0;
 		}
 
@@ -159,67 +173,66 @@ private:
 	}
 
 	State A1() {
-		return s_A1;
+		return State::A1;
 	}
 	State A2() {
-		return s_A2;
+		return State::A2;
 	}
 	State A3() {
-		return s_A3;
+		return State::A3;
 	}
 	State B1() {
-		return s_B1;
+		return State::B1;
 	}
 	State C1() {
-		return s_C1;
+		return State::C1;
 	}
 	State C2() {
-		return s_C2;
+		return State::C2;
 	}
 	State D1() {
-		return s_D1;
+		return State::D1;
 	}
 	State D2() {
-		return s_D2;
+		return State::D2;
 	}
 	State D3() {
-		return s_D3;
+		return State::D3;
 	}
 	State D4() {
-		return s_D4;
+		return State::D4;
 	}
 	State D5() {
-		return s_D5;
+		return State::D5;
 	}
 	State D6() {
-		lexemeType = OPERAND;
-		return s_D6;
+		return State::D6;
 	}
 	State E1() {
-		return s_E1;
+		return State::E1;
 	}
 	State E2() {
-		return s_E2;
+		return State::E2;
 	}
 	State F1() {
-		return s_F1;
+		return State::F1;
 	}
 	State F2() {
-		return s_F2;
+		return State::F2;
 	}
 	State F3() {
-		return s_F3;
+		return State::F3;
 	}
 	State G1() {
-		return s_G1;
+		return State::G1;
 	}
 	State H1() {
-		return s_H1;
+		return State::H1;
 	}
 	State Error1() {
 		lexemeType = ERROR;
 		CreateLexeme();
-		return s_G1;
+		return State::G1;
 	}
 
 	State A1a() {
@@ -591,7 +604,7 @@ private:
 		return B1b();
 	}
 	void YES1E() {
-		int pointer = line % 101;
+		/*int pointer = line % 101;
 		for (int i : ListPointerTable[pointer]) {
 			if (i == line) {
 				ptr = &ListPointerTable[pointer];
@@ -599,7 +612,17 @@ private:
 			}
 		}
 		ListPointerTable[pointer].push_front(line);
-		ptr = &ListPointerTable[pointer];
+		ptr = &ListPointerTable[pointer];*/
+
+		for (int* v : tableLabel) {
+			if (v == &line) {
+				ptr = v;
+				return;
+			}
+		}
+		tableLabel.push_back(new int(line));
+		ptr = tableLabel.back();
+
 	}
 
 	void YES1D() {
@@ -620,7 +643,7 @@ private:
 	State Exit1() {
 		lexemeType = ENDMARKER;
 		CreateLexeme();
-		return s_Exit;
+		return State::Exit;
 	}
 	State Exit2() {
 		CreateLexeme();
@@ -663,6 +686,7 @@ private:
 			lexeme.value = ptr;
 		}
 
+
 		LexemeList.push_back(lexeme);
 	}
 	void AddVariable() {
@@ -700,43 +724,52 @@ private:
 
 	void PrintList() {
 		cout << "LexicalBlock Output: " << endl << endl;
-
-		cout << "Lexeme Table" << endl << "Line\t" << "Name\t\t\t" << "Adress" << endl;
+		cout <<"Lexeme Table" << endl << "Line\t" << "Name\t\t\t" << "Adress" << endl;
 		for (LexemeToken l : LexemeList) {
 			cout << l << endl;
 		}
 		cout << endl << "Const Table" << endl;
+		cout << "Adress\t\t" << "Value" << endl;
 		for (Variable* v : tableConst) {
 			cout << v << '\t' << v->value << endl;
 		}
 		cout << endl << "Varible Name Table" << endl;
+		cout << "Adress\t\t" << "Value" << endl;
 		for (Variable* v : tableName) {
 			cout << v << '\t' << v->name << endl;
 		}
+
+		cout << endl << "Label Table" << endl;
+		cout << "Adress\t\t" << "Value" << endl;
+		for (int* i : tableLabel) {
+			cout << i << '\t' << *i << endl;
+		}
+
+		
 	}
 
 public:
 	Parser() {
 		automata = {
-			{s_A1,	{							{Digit, &Parser::E2a},																																					{Space, &Parser::A1},	{LF, &Parser::A1},	{EndOfFile, &Parser::Exit1}	}},
-			{s_A2,	{{Letter, &Parser::C2a},	{Digit, &Parser::D1a},	{Arithmet, &Parser::A2a},	{Relation, &Parser::H1a},	{OpenBracket, &Parser::A2h},	{ClosedBracket, &Parser::A3b},	{Point, &Parser::D6},	{Space, &Parser::A2},	{LF, &Parser::A1},	{EndOfFile, &Parser::Exit1}	}},
-			{s_A3,	{{Letter, &Parser::B1a},	{Digit, &Parser::D1a},	{Arithmet, &Parser::A2a},	{Relation, &Parser::H1a},	{OpenBracket, &Parser::A2h},	{ClosedBracket, &Parser::A3b},	{Point, &Parser::D6},	{Space, &Parser::A3},	{LF, &Parser::A1},	{EndOfFile, &Parser::Exit1}	}},
-			{s_B1,	{{Letter, &Parser::M1},																																												{Space, &Parser::B1},													}},
-			{s_C1,	{{Letter, &Parser::C2d},																																											{Space, &Parser::C1},													}},
-			{s_C2,	{{Letter, &Parser::B1b},	{Digit, &Parser::A3a},	{Arithmet, &Parser::A2g},	{Relation, &Parser::H1b},	{OpenBracket, &Parser::A2k},	{ClosedBracket, &Parser::A3c},							{Space, &Parser::C2},	{LF, &Parser::A1a},	{EndOfFile, &Parser::Exit2}	}},
-			{s_D1,	{{Letter, &Parser::M2},		{Digit, &Parser::D1b},	{Arithmet, &Parser::A2c},	{Relation, &Parser::H1c},	{OpenBracket, &Parser::A2l},	{ClosedBracket, &Parser::A3d},	{Point, &Parser::D2c},	{Space, &Parser::D1},	{LF, &Parser::A1b},	{EndOfFile, &Parser::Exit3}	}},
-			{s_D2,	{{Letter, &Parser::M3},		{Digit, &Parser::D2a},	{Arithmet, &Parser::A2d},	{Relation, &Parser::H1d},	{OpenBracket, &Parser::A2m},	{ClosedBracket, &Parser::A3e},							{Space, &Parser::D2},	{LF, &Parser::A1c},	{EndOfFile, &Parser::Exit4}	}},
-			{s_D3,	{							{Digit, &Parser::D5a},	{Arithmet, &Parser::D4a},																														{Space, &Parser::D3},													}},
-			{s_D4,	{							{Digit, &Parser::D5b},																																					{Space, &Parser::D4},													}},
-			{s_D5,	{{Letter, &Parser::B1c},	{Digit, &Parser::D5c},	{Arithmet, &Parser::A2e},	{Relation, &Parser::H1e},	{OpenBracket, &Parser::A2n},	{ClosedBracket, &Parser::A3f},							{Space, &Parser::D5},	{LF, &Parser::A1d},	{EndOfFile, &Parser::Exit5}	}},
-			{s_D6,	{							{Digit, &Parser::D2b},																																					{Space, &Parser::D6},													}},
-			{s_E1,	{							{Digit, &Parser::E2b},																																					{Space, &Parser::E1},													}},
-			{s_E2,	{{Letter, &Parser::B1e},	{Digit, &Parser::E2c},	{Arithmet, &Parser::A2f},	{Relation, &Parser::H1f},	{OpenBracket, &Parser::A2j},	{ClosedBracket, &Parser::A3g},							{Space, &Parser::E2},	{LF, &Parser::A1e},	{EndOfFile, &Parser::Exit6}	}},
-			{s_F1,	{{Letter, &Parser::F2a},																																											{Space, &Parser::F1},													}},
-			{s_F2,	{							{Digit, &Parser::F3a},								{Relation, &Parser::A2o},																							{Space, &Parser::F2},													}},
-			{s_F3,	{																				{Relation, &Parser::A2o},																							{Space, &Parser::F3},													}},
-			{s_G1,	{{Letter, &Parser::G1},		{Digit, &Parser::G1},	{Arithmet, &Parser::G1},	{Relation, &Parser::G1},	{OpenBracket, &Parser::G1},		{ClosedBracket, &Parser::G1},	{Point, &Parser::G1},	{Space, &Parser::G1},	{LF, &Parser::A1},	{EndOfFile, &Parser::Exit1}	}},
-			{s_H1,	{{Letter, &Parser::C2b},	{Digit, &Parser::D1c},	{Arithmet, &Parser::A2g},	{Relation, &Parser::A2p},	{OpenBracket, &Parser::A2k},	{ClosedBracket, &Parser::A3c},	{Point, &Parser::D6a},	{Space, &Parser::H1},	{LF, &Parser::A1a},	{EndOfFile, &Parser::Exit2}	}},
+			{State::A1,	{									{Symbol::Digit, &Parser::E2a},																																															{Symbol::Space, &Parser::A1},	{Symbol::LF, &Parser::A1},	{Symbol::EndOfFile, &Parser::Exit1}	}},
+			{State::A2,	{{Symbol::Letter, &Parser::C2a},	{Symbol::Digit, &Parser::D1a},	{Symbol::Arithmet, &Parser::A2a},	{Symbol::Relation, &Parser::H1a},	{Symbol::OpenBracket, &Parser::A2h},	{Symbol::ClosedBracket, &Parser::A3b},	{Symbol::Point, &Parser::D6},	{Symbol::Space, &Parser::A2},	{Symbol::LF, &Parser::A1},	{Symbol::EndOfFile, &Parser::Exit1}	}},
+			{State::A3,	{{Symbol::Letter, &Parser::B1a},	{Symbol::Digit, &Parser::D1a},	{Symbol::Arithmet, &Parser::A2a},	{Symbol::Relation, &Parser::H1a},	{Symbol::OpenBracket, &Parser::A2h},	{Symbol::ClosedBracket, &Parser::A3b},	{Symbol::Point, &Parser::D6},	{Symbol::Space, &Parser::A3},	{Symbol::LF, &Parser::A1},	{Symbol::EndOfFile, &Parser::Exit1}	}},
+			{State::B1,	{{Symbol::Letter, &Parser::M1},																																																								{Symbol::Space, &Parser::B1},																	}},
+			{State::C1,	{{Symbol::Letter, &Parser::C2d},																																																							{Symbol::Space, &Parser::C1},																	}},
+			{State::C2,	{{Symbol::Letter, &Parser::B1b},	{Symbol::Digit, &Parser::A3a},	{Symbol::Arithmet, &Parser::A2g},	{Symbol::Relation, &Parser::H1b},	{Symbol::OpenBracket, &Parser::A2k},	{Symbol::ClosedBracket, &Parser::A3c},									{Symbol::Space, &Parser::C2},	{Symbol::LF, &Parser::A1a},	{Symbol::EndOfFile, &Parser::Exit2}	}},
+			{State::D1,	{{Symbol::Letter, &Parser::M2},		{Symbol::Digit, &Parser::D1b},	{Symbol::Arithmet, &Parser::A2c},	{Symbol::Relation, &Parser::H1c},	{Symbol::OpenBracket, &Parser::A2l},	{Symbol::ClosedBracket, &Parser::A3d},	{Symbol::Point, &Parser::D2c},	{Symbol::Space, &Parser::D1},	{Symbol::LF, &Parser::A1b},	{Symbol::EndOfFile, &Parser::Exit3}	}},
+			{State::D2,	{{Symbol::Letter, &Parser::M3},		{Symbol::Digit, &Parser::D2a},	{Symbol::Arithmet, &Parser::A2d},	{Symbol::Relation, &Parser::H1d},	{Symbol::OpenBracket, &Parser::A2m},	{Symbol::ClosedBracket, &Parser::A3e},									{Symbol::Space, &Parser::D2},	{Symbol::LF, &Parser::A1c},	{Symbol::EndOfFile, &Parser::Exit4}	}},
+			{State::D3,	{									{Symbol::Digit, &Parser::D5a},	{Symbol::Arithmet, &Parser::D4a},																																						{Symbol::Space, &Parser::D3},																	}},
+			{State::D4,	{									{Symbol::Digit, &Parser::D5b},																																															{Symbol::Space, &Parser::D4},																	}},
+			{State::D5,	{{Symbol::Letter, &Parser::B1c},	{Symbol::Digit, &Parser::D5c},	{Symbol::Arithmet, &Parser::A2e},	{Symbol::Relation, &Parser::H1e},	{Symbol::OpenBracket, &Parser::A2n},	{Symbol::ClosedBracket, &Parser::A3f},									{Symbol::Space, &Parser::D5},	{Symbol::LF, &Parser::A1d},	{Symbol::EndOfFile, &Parser::Exit5}	}},
+			{State::D6,	{									{Symbol::Digit, &Parser::D2b},																																															{Symbol::Space, &Parser::D6},																	}},
+			{State::E1,	{									{Symbol::Digit, &Parser::E2b},																																															{Symbol::Space, &Parser::E1},																	}},
+			{State::E2,	{{Symbol::Letter, &Parser::B1e},	{Symbol::Digit, &Parser::E2c},	{Symbol::Arithmet, &Parser::A2f},	{Symbol::Relation, &Parser::H1f},	{Symbol::OpenBracket, &Parser::A2j},	{Symbol::ClosedBracket, &Parser::A3g},									{Symbol::Space, &Parser::E2},	{Symbol::LF, &Parser::A1e},	{Symbol::EndOfFile, &Parser::Exit6}	}},
+			{State::F1,	{{Symbol::Letter, &Parser::F2a},																																																							{Symbol::Space, &Parser::F1},																	}},
+			{State::F2,	{									{Symbol::Digit, &Parser::F3a},										{Symbol::Relation, &Parser::A2o},																													{Symbol::Space, &Parser::F2},																	}},
+			{State::F3,	{																										{Symbol::Relation, &Parser::A2o},																													{Symbol::Space, &Parser::F3},																	}},
+			{State::G1,	{{Symbol::Letter, &Parser::G1},		{Symbol::Digit, &Parser::G1},	{Symbol::Arithmet, &Parser::G1},	{Symbol::Relation, &Parser::G1},	{Symbol::OpenBracket, &Parser::G1},		{Symbol::ClosedBracket, &Parser::G1},	{Symbol::Point, &Parser::G1},	{Symbol::Space, &Parser::G1},	{Symbol::LF, &Parser::A1},	{Symbol::EndOfFile, &Parser::Exit1}	}},
+			{State::H1,	{{Symbol::Letter, &Parser::C2b},	{Symbol::Digit, &Parser::D1c},	{Symbol::Arithmet, &Parser::A2g},	{Symbol::Relation, &Parser::A2p},	{Symbol::OpenBracket, &Parser::A2k},	{Symbol::ClosedBracket, &Parser::A3c},	{Symbol::Point, &Parser::D6a},	{Symbol::Space, &Parser::H1},	{Symbol::LF, &Parser::A1a},	{Symbol::EndOfFile, &Parser::Exit2}	}},
 
 		};
 
@@ -775,8 +808,8 @@ public:
 			return;
 		}
 		int ch;
-		State state = s_A1;
-		while (state != s_Exit) {
+		State state = State::A1;
+		while (state != State::Exit) {
 			ch = f.get();
 			s = transliterator(ch);
 			if (!automata[state].count(s.type)) {
@@ -791,22 +824,16 @@ public:
 	}
 };
 
-
-
-
 enum class AtomSet {
 	FINIS, LINEN, ASSIGN, JUMP, JUMPSAVE, RETURNJUMP, CONDJUMP, SAVE, LABEL, TEST, INCR, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
 };
-
-
-
 
 enum class GrammarTokenClass {
 	program, program_body, step_part, more_lines, expression, term, factor, primary, E_list, T_list, F_list, REL_OPERATOR, NEXT, GOTO, RIGHT_PAREN, END, TO, delta, ASSIGN, CONDJUMP, SAVE, LABEL, TEST, CHECK, INCR, JUMP, ADD, SUBT, MULT, DIV, EXP, PLUS, NEG
 };
 
 enum class SyntaxTokenClass {
-	LINE, OPERAND, REL_OPERATOR, NEXT, ASSIGN, FOR, GOTO, GOSUB, LEFT_PAREN, RIGHT_PAREN, IF, RETURN, END, TO, STEP, COMMENT, PLUS, NEG, MULT, DIV, EXP, ERROR, ENDMARKER
+	LINE, OPERAND, REL_OPERATOR, NEXT, ASSIGN, FOR, GOTO, GOSUB, LEFT_PAREN, RIGHT_PAREN, IF, RETURN, END, TO, STEP, COMMENT, ERROR, ENDMARKER, PLUS, NEG, MULT, DIV, EXP
 };
 
 struct Pointer {
@@ -838,55 +865,55 @@ struct Atom {
 			os << "FINIS ";
 			break;
 		case AtomSet::LINEN:
-			os << "LINEN " << a.ptr1->getValue();
+			os << "LINEN\t\t" << *(int*)a.ptr1->getValue() << "\t"<< a.ptr1->getValue();
 			break;
 		case AtomSet::ASSIGN:
-			os << "ASSIGN " << a.ptr1->getValue() << " " << a.ptr2->getValue();
+			os << "ASSIGN\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
 			break;
 		case AtomSet::JUMP:
-			os << "JUMP " << a.ptr1->getValue();
+			os << "JUMP\t\t\t" << a.ptr1->getValue();
 			break;
 		case AtomSet::JUMPSAVE:
-			os << "JUMPSAVE " << a.ptr1->getValue();
+			os << "JUMPSAVE\t\t" << a.ptr1->getValue();
 			break;
 		case AtomSet::RETURNJUMP:
-			os << "RETURNJUMP ";
+			os << "RETURNJUMP\t\t";
 			break;
 		case AtomSet::CONDJUMP:
-			os << "CONDJUMP " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue() << " " << a.ptr4->getValue();
+			os << "CONDJUMP\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue() << '\t' << a.ptr4->getValue();
 			break;
 		case AtomSet::SAVE:
-			os << "SAVE " << a.ptr1->getValue() << " " << a.ptr2->getValue();
+			os << "SAVE\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
 			break;
 		case AtomSet::LABEL:
-			os << "LABEL " << a.ptr1->getValue();
+			os << "LABEL\t\t\t" << a.ptr1->getValue();
 			break;
 		case AtomSet::TEST:
-			os << "TEST " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue() << " " << a.ptr4->getValue();
+			os << "TEST\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue() << '\t' << a.ptr4->getValue();
 			break;
 		case AtomSet::INCR:
-			os << "INCR " << a.ptr1->getValue() << " " << a.ptr2->getValue();
+			os << "INCR\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
 			break;
 		case AtomSet::ADD:
-			os << "ADD " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue();
+			os << "ADD\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
 			break;
 		case AtomSet::SUBT:
-			os << "SUBT " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue();
+			os << "SUBT\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
 			break;
 		case AtomSet::MULT:
-			os << "MULT " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue();
+			os << "MULT\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
 			break;
 		case AtomSet::DIV:
-			os << "DIV " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue();
+			os << "DIV\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
 			break;
 		case AtomSet::EXP:
-			os << "EXP " << a.ptr1->getValue() << " " << a.ptr2->getValue() << " " << a.ptr3->getValue();
+			os << "EXP\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue() << '\t' << a.ptr3->getValue();
 			break;
 		case AtomSet::PLUS:
-			os << "PLUS " << a.ptr1->getValue() << " " << a.ptr2->getValue();
+			os << "PLUS\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
 			break;
 		case AtomSet::NEG:
-			os << "NEG " << a.ptr1->getValue() << " " << a.ptr2->getValue();
+			os << "NEG\t\t\t" << a.ptr1->getValue() << '\t' << a.ptr2->getValue();
 			break;
 		}
 
@@ -920,7 +947,8 @@ struct SyntaxElements {
 	}
 };
 
-
+list<Atom> AtomList;
+list<void*> interimTable;
 
 class SyntexAnalyzer {
 private:
@@ -932,9 +960,7 @@ private:
 	map<GrammarTokenClass, map<SyntaxTokenClass, function_pointer>> SyntaxBox;
 	SyntaxTokenClass type;
 	stack<SyntaxElements> magazine;
-
-	list<Atom> AtomList;
-
+	
 	bool isExit = false;
 
 	Pointer* line;
@@ -942,61 +968,22 @@ private:
 	list<LexemeToken>::iterator currentLexeme;
 	
 
-	Variable* NEWTSR() {
+	void* NEWTSR() {
 		return NEWTR();
 	}
 
-	Variable* NEWTL() {
-		varList.push_back(new Variable(true, 0));
-		return varList.back();
+	void* NEWTL() {
+		interimTable.push_back(new void*);
+		return interimTable.back();
 	}
 
-	Variable* NEWTR() {
-		varList.push_back(new Variable());
-		return varList.back();
+	void* NEWTR() {
+		interimTable.push_back(new void*);
+		return interimTable.back();
 	}
-
 
 	void shift() {
-		currentLexeme++;
-		switch (currentLexeme->type) {
-		case LINE: type = S::LINE;
-			break;
-		case OPERAND: type = S::OPERAND;
-			break;
-		case NEXT: type = S::NEXT;
-			break;
-		case FOR: type = S::FOR;
-			break;
-		case GOTO: type = S::GOTO;
-			break;
-		case GOSUB: type = S::GOSUB;
-			break;
-		case OPENBRACKET: type = S::LEFT_PAREN;
-			break;
-		case CLOSEDBRACKET: type = S::RIGHT_PAREN;
-			break;
-		case IF: type = S::IF;
-			break;
-		case RETURN: type = S::RETURN;
-			break;
-		case END: type = S::END;
-			break;
-		case TO: type = S::TO;
-			break;
-		case STEP: type = S::STEP;
-			break;
-		case COMMENT: type = S::COMMENT;
-			break;
-		case ERROR: type = S::ERROR;
-			break;
-		case ENDMARKER: type = S::ENDMARKER;
-			break;
-		case RELATION: type = S::REL_OPERATOR;
-			break;
-		case LET: type = S::ASSIGN;
-			break;
-		case ARITHMET:
+		if (currentLexeme->type == ARITHMET) {
 			switch (*(int*)currentLexeme->value) {
 			case 1: type = S::PLUS; break;
 			case 2: type = S::NEG;	break;
@@ -1004,8 +991,10 @@ private:
 			case 4: type = S::DIV;	break;
 			case 5: type = S::EXP;	break;
 			}
-			break;
 		}
+		else {
+			type = (SyntaxTokenClass)(currentLexeme->type);
+		}		
 	}
 
 	void rule1() {
@@ -1019,7 +1008,8 @@ private:
 		atom.type = AtomSet::LINEN;
 		atom.ptr1 = line;
 		AtomList.push_back(atom);
-		
+
+		currentLexeme++;
 		shift();
 	}
 	void rule2() {
@@ -1033,6 +1023,7 @@ private:
 		atom.ptr1 = line;
 		AtomList.push_back(atom);
 
+		currentLexeme++;
 		shift();
 	}
 	void rule4() {
@@ -1042,6 +1033,7 @@ private:
 		magazine.push(SyntaxElements(G::ASSIGN, getNewPointer(currentLexeme->value), ptr));
 		magazine.push(SyntaxElements(G::expression, ptr));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule5() {
@@ -1053,6 +1045,7 @@ private:
 		atom.ptr1 = getNewPointer(currentLexeme->value);
 		AtomList.push_back(atom);
 
+		currentLexeme++;
 		shift();
 	}
 	void rule6() {
@@ -1070,6 +1063,7 @@ private:
 		magazine.push(SyntaxElements(G::REL_OPERATOR, ptr3));
 		magazine.push(SyntaxElements(G::expression, ptr1));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule7() {
@@ -1081,6 +1075,7 @@ private:
 		atom.ptr1 = getNewPointer(currentLexeme->value);
 		AtomList.push_back(atom);
 
+		currentLexeme++;
 		shift();
 	}
 	void rule8() {
@@ -1091,6 +1086,7 @@ private:
 		atom.type = AtomSet::RETURNJUMP;
 		AtomList.push_back(atom);
 
+		currentLexeme++;
 		shift();
 	}
 	void rule9() {
@@ -1123,12 +1119,15 @@ private:
 		magazine.push(SyntaxElements(G::ASSIGN, p, ptr4));
 		magazine.push(SyntaxElements(G::expression, ptr4));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule10() {
 		SyntaxElements tmp = magazine.top();
 		magazine.pop();
 		magazine.push(SyntaxElements(G::expression, tmp.ptr1));
+
+		currentLexeme++;
 		shift();
 	}
 	void rule11() {
@@ -1139,6 +1138,7 @@ private:
 		magazine.pop();
 		magazine.push(SyntaxElements(G::more_lines));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule13() {
@@ -1150,6 +1150,7 @@ private:
 		atom.ptr1 = getNewPointer(currentLexeme->value);
 		AtomList.push_back(atom);
 
+		currentLexeme++;
 		shift();
 	}
 	void rule14() {
@@ -1166,6 +1167,8 @@ private:
 		magazine.push(SyntaxElements(G::E_list, getNewPointer(NEWTR()), tmp.ptr1));
 		magazine.push(SyntaxElements(G::PLUS, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::term, ptr));
+
+		currentLexeme++;
 		shift();
 	}
 	void rule16() {
@@ -1175,6 +1178,8 @@ private:
 		magazine.push(SyntaxElements(G::E_list, getNewPointer(NEWTR()), tmp.ptr1));
 		magazine.push(SyntaxElements(G::NEG, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::term, ptr));
+
+		currentLexeme++;
 		shift();
 	}
 	void rule17() {
@@ -1184,6 +1189,8 @@ private:
 		magazine.push(SyntaxElements(G::E_list, getNewPointer(NEWTR()), tmp.ptr2));
 		magazine.push(SyntaxElements(G::ADD, tmp.ptr1, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::term, ptr));
+
+		currentLexeme++;
 		shift();
 	}
 	void rule18() {
@@ -1193,6 +1200,8 @@ private:
 		magazine.push(SyntaxElements(G::E_list, getNewPointer(NEWTR()), tmp.ptr2));
 		magazine.push(SyntaxElements(G::SUBT, tmp.ptr1, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::term, ptr));
+
+		currentLexeme++;
 		shift();
 	}
 	void rule19() {
@@ -1214,6 +1223,7 @@ private:
 		magazine.push(SyntaxElements(G::MULT, tmp.ptr1, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::factor, ptr));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule22() {
@@ -1224,6 +1234,7 @@ private:
 		magazine.push(SyntaxElements(G::DIV, tmp.ptr1, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::factor, ptr));
 
+		currentLexeme++;
 		shift();
 	}
 	void rule23() {
@@ -1243,7 +1254,9 @@ private:
 		Pointer* ptr = getNewPointer();
 		magazine.push(SyntaxElements(G::F_list, getNewPointer(NEWTR()), tmp.ptr2));
 		magazine.push(SyntaxElements(G::EXP, tmp.ptr1, ptr, tmp.ptr2));
-		magazine.push(SyntaxElements(G::primary, tmp.ptr1));
+		magazine.push(SyntaxElements(G::primary, ptr));
+
+		currentLexeme++;
 		shift();	
 	}
 	void rule26() {
@@ -1256,21 +1269,28 @@ private:
 		magazine.push(SyntaxElements(G::RIGHT_PAREN));
 		magazine.push(SyntaxElements(G::expression, tmp.ptr1));
 
+		currentLexeme++;
 		shift();
 	}
  	void rule28() {
 		magazine.top().ptr1->setValue(currentLexeme->value);
 		magazine.pop();
+
+		currentLexeme++;
 		shift();
 	}
 
 	void ruleA() {
 		magazine.pop();
+
+		currentLexeme++;
 		shift();
 	}
 	void ruleB() {
 		magazine.top().ptr1->setValue(currentLexeme->value);
 		magazine.pop();
+
+		currentLexeme++;
 		shift();
 	}
 	void ruleC() {
@@ -1419,7 +1439,6 @@ private:
 		magazine.pop();
 	}
 
-
 	void ruleAlpha() {
 		ErrorRoutine("PROGRAM BIGINS INCORRECTLY");
 	}
@@ -1427,13 +1446,13 @@ private:
 		ErrorRoutine("STATEMENT BEGINS INCORRECTLY");
 	}
 	void ruleGamma1() {
-		ErrorRoutine("UNEXPECTED ${input} NEAR END OF FOR STATEMENT");
+		ErrorRoutine("UNEXPECTED ", true, " NEAR END OF FOR STATEMENT");
 	}
 	void ruleGamma2() {
 		ErrorRoutine("EXTRA RIGHT PARENTHESIS IN EXPRESSION AFTER TO");
 	}
 	void ruleDelta() {
-		ErrorRoutine("UNEXPECTED ${input} AFTER STATEMENT COMPLETE");
+		ErrorRoutine("UNEXPECTED ", true, " AFTER STATEMENT COMPLETE");
 	}
 	void ruleZeta1() {
 		ErrorRoutine("EXPRESSION INCOMPLETE - MISSING OPERAND");
@@ -1445,10 +1464,10 @@ private:
 		ErrorRoutine("MISSING OPERAND IN EXPRESSION");
 	}
 	void ruleZeta4() {
-		ErrorRoutine("UNEXPECTED ${input} FOLLOWS EXPRESSION");
+		ErrorRoutine("UNEXPECTED ", true, " FOLLOWS EXPRESSION");
 	}
 	void ruleZeta5() {
-		ErrorRoutine("EXPRESSION BEGINS WITH ${input}");
+		ErrorRoutine("EXPRESSION BEGINS WITH ", true);
 	}
 	void ruleZeta6() {
 		ErrorRoutine("TWO OPERATORS A ROW IN EXPRESSION	");
@@ -1457,7 +1476,7 @@ private:
 		ErrorRoutine("OPERATOR MISSING IN EXPRESSION");
 	}
 	void ruleTheta1() {
-		ErrorRoutine("UNEXEPECTED ${input} IN IF STATEMENT");
+		ErrorRoutine("UNEXEPECTED ", true, " IN IF STATEMENT");
 	}
 	void ruleTheta2() {
 		ErrorRoutine("IF STATEMENT INCOMPLETE");
@@ -1469,7 +1488,7 @@ private:
 		ErrorRoutine("FOR STATEMENTS INCORRECTLY NESTED - MISSING NEXT");
 	}
 	void ruleMu1() {
-		ErrorRoutine("UNEXPECTED ${input} IN IF STATEMENT");
+		ErrorRoutine("UNEXPECTED ", true, " IN IF STATEMENT");
 	}
 	void ruleMu2() {
 		ErrorRoutine("IF STATEMENT INCOMPLETE");
@@ -1481,7 +1500,7 @@ private:
 		ErrorRoutine("EXTRA RIGHT PARENTHESIS IN EXPRESSION AFTER RELATIONAL OPERATOR");
 	}
 	void ruleNu1() {
-		ErrorRoutine("MISSING RIGHT PARENTHESIS BEFORE ${input}");
+		ErrorRoutine("MISSING RIGHT PARENTHESIS BEFORE ", true);
 	}
 	void ruleNu2() {
 		ErrorRoutine("MISSING RIGHT PARENTHESIS AT THE END OF LINE");
@@ -1490,7 +1509,7 @@ private:
 		ErrorRoutine("FOR STATEMENT INCORRECTLY NESTED - EXTRA NEXT");
 	}
 	void rulePi1() {
-		ErrorRoutine("UNEXPRECTED ${input} IN FOR STATEMENT");
+		ErrorRoutine("UNEXPRECTED ", true, " IN FOR STATEMENT");
 	}
 	void rulePi2() {
 		ErrorRoutine("FOR STATEMENT INCOMPLETE");
@@ -1505,7 +1524,7 @@ private:
 		ErrorRoutine("PROGRAM CONTINUES AFTER END STATEMENT");
 	}
 	void ruleSigma() {
-		ErrorRoutine("");
+		ErrorRoutine("LexicalBlock Error");
 	}
 	void ruleTau1() {
 		ErrorRoutine("NO PROGRAM");
@@ -1520,10 +1539,16 @@ private:
 		ErrorRoutine("COMPILER ERROR");
 	}
 	bool ErrorFound = false;
-	void ErrorRoutine(string ErrorMessage) {
-		cout << "Line: " << line->getValue() << " " << ErrorMessage << " LEXEME: "  << currentLexeme->line << " " << LexemeTokenClassName[currentLexeme->type] << " " << currentLexeme->value << endl;
-		ErrorFound = true;
+	void ErrorRoutine(string ErrorMessagePt1, bool f = false, string ErrorMessagePt2 = "") {
+		cout << ErrorMessagePt1;
+			if (f) {
+				cout << LexemeTokenClassName[currentLexeme->type];
+			} 
+		cout << ErrorMessagePt2 << endl;
+
+		ErrorFound = true;	
 		while (currentLexeme->type != LINE && currentLexeme->type != ENDMARKER) {
+			currentLexeme++;
 			shift();
 		}
 		if (currentLexeme->type == ENDMARKER) {
@@ -1543,9 +1568,14 @@ private:
 
 	void PrintAtoms() {
 		cout << "SyntaxBlock Output:" << endl << endl;
+		cout << "Atom\t\t" << "Line\t" << "Ptr1\t\t" << "Ptr2\t\t" << "Ptr3\t\t" << "Ptr4" << endl;
+		for (Atom atom : AtomList) {
+			cout << atom << endl;
+		}
 
-		for (Atom a : AtomList) {
-			cout << a << endl;
+		cout << endl << "interimTable" << endl;
+		for (void* v : interimTable) {
+			cout << v << endl;
 		}
 	}
 
@@ -1593,12 +1623,24 @@ public:
 		magazine.push(G::program);
 
 		currentLexeme = LexemeList.begin();
+		shift();
 
 		while (!isExit && !magazine.empty()) {
 			(this->*SyntaxBox[magazine.top().type][type])();
 		}
 		PrintAtoms();
 	}
+};
+
+enum class TableElementClass {
+	CONSTANT, VARIABLE, PARTIAL_RESULT, SAVED_RESULT, LABEL
+};
+
+struct TableElement {
+	TableElementClass type;
+	void* value;
+	void* adress;
+	int status;
 };
 
 int main() {
