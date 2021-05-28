@@ -46,7 +46,6 @@ string AtomSetName[]{
 	"FINIS\t", "LINEN\t", "ASSIGN\t", "JUMP\t", "JUMPSAVE", "RETURNJUMP", "CONDJUMP", "SAVE\t", "LABEL\t", "TEST\t", "INCR\t", "ADD\t", "SUBT\t", "MULT\t", "DIV\t", "EXP\t", "PLUS\t", "NEG\t"
 };
 
-
 struct SymbolicToken {
 	SymbolicTokenClass type;
 	int value;
@@ -127,11 +126,8 @@ private:
 		function_pointer f;
 	};
 
-
 	int init_vector[26] = { 0, 0, 0, 0, 1, 3, 5, 0, 11, 0, 0, 12, 0, 14, 0, 0, 0, 17, 23, 26, 0, 0, 0, 0, 0, 0 };
 	SearchTableClass searchTable[27];
-
-	
 
 	SymbolicToken transliterator(int ch) {
 		SymbolicToken s;
@@ -171,7 +167,6 @@ private:
 			s.type = Symbol::Error;
 			s.value = 0;
 		}
-
 		if (ch == '=' || ch == '+') {
 			value = 1;
 		}
@@ -253,7 +248,6 @@ private:
 		CreateLexeme();
 		return State::G1;
 	}
-
 	State A1a() {
 		CreateLexeme();
 		return A1();
@@ -274,7 +268,6 @@ private:
 		YES1E();
 		return A1a();
 	}
-
 	State A2a() {
 		lexemeType = Lexeme::ARITHMET;
 		return A2b();
@@ -372,7 +365,6 @@ private:
 		lexemeType = Lexeme::TO;
 		return A2b();
 	}
-
 	State A3a() {
 		name += (char)value + '0';
 		CreateLexeme();
@@ -403,7 +395,6 @@ private:
 		YES1E();
 		return A3c();
 	}
-
 	State B1a() {
 		pos = init_vector[value];
 		if (pos == 0)
@@ -428,12 +419,10 @@ private:
 		YES1E();
 		return B1b();
 	}
-
 	State C1a() {
 		lexemeType = Lexeme::NEXT;
 		return C1();
 	}
-
 	State C2a() {
 		lexemeType = Lexeme::OPERAND;
 		return C2d();
@@ -447,7 +436,6 @@ private:
 		isVariable = true;
 		return C2();
 	}
-
 	State D1a() {
 		lexemeType = Lexeme::OPERAND;
 		num = value;
@@ -461,7 +449,6 @@ private:
 		CreateLexeme();
 		return D1a();
 	}
-
 	State D2a() {
 		counter++;
 		num = num * 10 + value;
@@ -476,12 +463,10 @@ private:
 		counter = 0;
 		return D2();
 	}
-
 	State D3a() {
 		counter = 0;
 		return D3();
 	}
-
 	State D4a() {
 		if (value == 1) {
 			sign = 1;
@@ -494,7 +479,6 @@ private:
 		}
 		return D4();
 	}
-
 	State D5a() {
 		sign = 1;
 		return D5b();
@@ -507,12 +491,10 @@ private:
 		order = order * 10 + value;
 		return D5();
 	}
-
 	State D6a() {
 		CreateLexeme();
 		return D6();
 	}
-
 	State E1a() {
 		lexemeType = Lexeme::GOTO;
 		lineFlag = false;
@@ -523,7 +505,6 @@ private:
 		lineFlag = false;
 		return E1();
 	}
-
 	State E2a() {
 		lexemeType = Lexeme::LINE;
 		lineFlag = true;
@@ -543,7 +524,6 @@ private:
 		}
 		return E2();
 	}
-
 	State F1a() {
 		lexemeType = Lexeme::LET;
 		return F1();
@@ -552,24 +532,20 @@ private:
 		lexemeType = Lexeme::FOR;
 		return F1();
 	}
-
 	State F2a() {
 		name = (char)value + 'A';
 		isVariable = true;
 		return F2();
 	}
-
 	State F3a() {
 		name += (char)value + '0';
 		return F3();
 	}
-
 	State G1a() {
 		lexemeType = Lexeme::COMMENT;
 		CreateLexeme();
 		return G1();
 	}
-
 	State H1a() {
 		rel = value;
 		lexemeType = Lexeme::RELATION;
@@ -632,7 +608,6 @@ private:
 		tableLabel.push_back(new int(line));
 		ptr = tableLabel.back();
 	}
-
 	void YES1D() {
 		order = 0;
 		AddConst();
@@ -727,18 +702,19 @@ private:
 		tableConst.push_back(new Variable(true, c));
 		ptr = tableConst.back();
 	}
-
 	void PrintList() {
 		cout << "LexicalBlock Output: " << endl << endl;
 		cout <<"Lexeme Table" << endl << "Line\t" << "Name\t\t" << "Adress" << endl;
 		for (LexemeToken l : LexemeList) {
 			cout << l << endl;
 		}
+		
 		cout << endl << "Const Table" << endl;
 		cout << "Adress\t\t" << "Value" << endl;
 		for (Variable* v : tableConst) {
 			cout << v << '\t' << v->value << endl;
 		}
+
 		cout << endl << "Varible Name Table" << endl;
 		cout << "Adress\t\t" << "Value" << endl;
 		for (Variable* v : tableName) {
@@ -750,8 +726,6 @@ private:
 		for (int* i : tableLabel) {
 			cout << i << '\t' << *i << endl;
 		}
-
-		
 	}
 
 public:
@@ -918,12 +892,10 @@ private:
 		interimTable.push_back(new Pointer()); 
 		return interimTable.back();
 	}
-
 	void* NEWTL() {
 		interimTable.push_back(new int());
 		return interimTable.back();
 	}
-
 	void* NEWTR() {
 		interimTable.push_back(new Variable(true, 0));
 		return interimTable.back();
@@ -1484,7 +1456,9 @@ private:
 	void ruleOmega() {
 		ErrorRoutine("COMPILER ERROR");
 	}
+
 	bool ErrorFound = false;
+
 	void ErrorRoutine(string ErrorMessagePt1, bool f = false, string ErrorMessagePt2 = "") {
 		cout << ErrorMessagePt1;
 			if (f) {
@@ -1510,8 +1484,6 @@ private:
 			}
 		}
 	}
-	list<Variable*> varList;
-
 	void PrintAtoms() {
 		cout << "SyntaxBlock Output:" << endl << endl;
 		cout << "Atom\t\t" << "Line\t" << "Ptr1\t\t" << "Ptr2\t\t" << "Ptr3\t\t" << "Ptr4" << endl;
