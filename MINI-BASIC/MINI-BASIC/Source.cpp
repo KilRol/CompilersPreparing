@@ -730,7 +730,7 @@ private:
 
 	void PrintList() {
 		cout << "LexicalBlock Output: " << endl << endl;
-		cout <<"Lexeme Table" << endl << "Line\t" << "Name\t\t\t" << "Adress" << endl;
+		cout <<"Lexeme Table" << endl << "Line\t" << "Name\t\t" << "Adress" << endl;
 		for (LexemeToken l : LexemeList) {
 			cout << l << endl;
 		}
