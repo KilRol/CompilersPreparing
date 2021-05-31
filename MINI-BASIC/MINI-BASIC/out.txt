@@ -1,0 +1,34 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+int main() {
+double X = 0;
+double Y = 0;
+double A = 0;
+double Z = 0;
+double B = 0;
+double C = 0;
+double D = 0;
+double E = 0;
+double F = 0;
+
+m10: ; goto m20;
+m20: ; goto m30;
+m30: X = 10 * 5; goto m40;
+m40: goto m70;
+m50: goto m140; goto m70;
+m70: if (X > 1) goto m80; else goto m80;
+m80: for(X = 10; X != 10; X = X + 1) {; goto m90;
+m90: for(Y = X; Y != 20; Y = Y + 2) {; goto m100;
+m100: ;}; goto m110;
+m110: ;}; goto m120;
+m120: A = pow(pow(X, 2), 3) * Y * 5 * (-pow(Z, 2) + 3); goto m130;
+m130: B = (pow(A, 2) / X / 7.1 + ((3 + X) + A)); goto m135;
+m135: goto m50;
+m140: C = ((((B + C) + pow((+Y / pow(2, 3) + 5), 2)) + 4 * pow(X, 2)) + 1); goto m150;
+m150: D = ((3 * A + pow(B, (pow(C, B) + 1)) * X / Y) + 1); goto m160;
+m160: E = ((A / pow(B, C) / 2 + pow(pow(A, 3), 4) / Y * B) + 6); goto m170;
+m170: F = (pow(pow(37, (pow(A, B) + C * pow(pow(A, 4), 5) * D)), pow(4, 3)) + 3); goto m180;
+m180: return 0; }

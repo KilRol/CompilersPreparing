@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <list>
 #include <stack>
 #include <vector>
@@ -872,6 +873,8 @@ struct SyntaxElements {
 list<Atom> AtomList;
 list<void*> interimTable;
 
+bool statusError = false;
+
 class SyntexAnalyzer {
 private:
 	typedef SyntexAnalyzer SA;
@@ -1171,7 +1174,7 @@ private:
 		magazine.pop();
 		Pointer* ptr = getNewPointer();
 		magazine.push(SyntaxElements(G::F_list, getNewPointer(NEWTR()), tmp.ptr2));
-		magazine.push(SyntaxElements(G::EXP, tmp.ptr1, ptr, tmp.ptr2));
+		magazine.push(SyntaxElements(G::EXP, tmp.ptr1, ptr, magazine.top().ptr1));
 		magazine.push(SyntaxElements(G::primary, ptr));
 
 		currentLexeme++;
@@ -1457,8 +1460,6 @@ private:
 		ErrorRoutine("COMPILER ERROR");
 	}
 
-	bool ErrorFound = false;
-
 	void ErrorRoutine(string ErrorMessagePt1, bool f = false, string ErrorMessagePt2 = "") {
 		cout << ErrorMessagePt1;
 			if (f) {
@@ -1466,7 +1467,8 @@ private:
 			} 
 		cout << ErrorMessagePt2 << endl;
 
-		ErrorFound = true;	
+		statusError = true;	
+
 		while (currentLexeme->type != Lexeme::LINE && currentLexeme->type != Lexeme::ENDMARKER) {
 			currentLexeme++;
 			shift();
@@ -1550,10 +1552,308 @@ public:
 	}
 };
 
+class CodeGenerator {
+
+	ofstream out;
+	bool isStart;
+	bool isGoto;
+	bool isFor;
+	bool isIf;
+	bool isJumpSave;
+	list<string> program;
+	list<int> rLabel;
+
+public:
+	CodeGenerator() {
+		 out.open("out.txt");
+		 isStart = true;
+		 isGoto = false;
+		 isFor = false;
+		 program.push_back("#include <iostream>\n");
+		 program.push_back("#include <cmath>\n\n");
+		 program.push_back("using namespace std;\n\n");
+		 program.push_back("int main() {\n");
+
+		 for (auto v : tableName) {
+			 program.push_back("double " + v->name + " = 0;\n");
+		 }
+	}
+
+	void gen(Atom atom) {
+		void* ptr;
+		stringstream ss;
+		if (atom.type == AtomSet::NEG) {
+			ss << "-";
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			*(Variable*)(atom.ptr2->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::PLUS) {
+			ss << "+";
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			*(Variable*)(atom.ptr2->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::ADD) {
+			ss << "(";
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			ss << " + ";
+			if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr2->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr2->getValue()))->name;
+			}
+			ss << ")";
+			*(Variable*)(atom.ptr3->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::SUBT) {
+			ss << "(";
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			ss << " + ";
+			if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr2->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr2->getValue()))->name;
+			}
+			ss << ")";
+			*(Variable*)(atom.ptr3->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::MULT) {
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			ss << " * ";
+			if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr2->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr2->getValue()))->name;
+			}
+			*(Variable*)(atom.ptr3->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::DIV) {
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			ss << " / ";
+			if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr2->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr2->getValue()))->name;
+			}
+			*(Variable*)(atom.ptr3->ptr) = Variable(ss.str());
+		}
+		else if (atom.type == AtomSet::EXP) {
+			ss << "pow(";
+			if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr1->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr1->getValue()))->name;
+			}
+			ss << ", ";
+			if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+				ss << ((Variable*)(atom.ptr2->getValue()))->value;
+			}
+			else {
+				ss << ((Variable*)(atom.ptr2->getValue()))->name;
+			}
+			ss << ")";
+			*(Variable*)(atom.ptr3->ptr) = Variable(ss.str());
+		}
+	}
+
+	void generate(bool status) {
+		if (status) return;
+		for (Atom atom : AtomList) {
+			stringstream ss;
+			string tmp;
+			string tmp2;
+			int cur;
+			switch (atom.type)
+			{
+			case AtomSet::LINEN:
+				cur = *(int*)(atom.ptr1->getValue());
+				if (isJumpSave) {
+					rLabel.push_back(cur);
+					isJumpSave = false;
+				}
+				if (isStart) {
+					ss << endl << "m" << *(int*)(atom.ptr1->getValue()) << ": ";
+					isStart = false;
+				}
+				else if (isIf) {
+					ss << "; else goto m" << *(int*)(atom.ptr1->getValue()) << ";" << endl << "m" << *(int*)(atom.ptr1->getValue()) << ": ";
+					isIf = false;
+				}
+				else if (isGoto) {
+					ss << ";" << endl << "m" << *(int*)(atom.ptr1->getValue()) << ": ";
+					isGoto = false;
+				}
+				else {
+					ss << "; goto m" << *(int*)(atom.ptr1->getValue()) << ";" << endl << "m" << *(int*)(atom.ptr1->getValue()) << ": ";
+				}
+				program.push_back(ss.str());
+				break;
+			case AtomSet::ASSIGN:
+				if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+					ss << ((Variable*)(atom.ptr1->getValue()))->value;
+				}
+				else {
+					ss << ((Variable*)(atom.ptr1->getValue()))->name;
+				}
+				ss << " = ";
+				if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+					ss << ((Variable*)(atom.ptr2->getValue()))->value;
+				}
+				else {
+					ss << ((Variable*)(atom.ptr2->getValue()))->name;
+				}
+				program.push_back(ss.str());
+				break;
+			case AtomSet::PLUS:
+				gen(atom);
+				break;
+			case AtomSet::NEG:
+				gen(atom);
+				break;
+			case AtomSet::ADD:
+				gen(atom);
+				break;
+			case AtomSet::SUBT:
+				gen(atom);
+				break;
+			case AtomSet::MULT:
+				gen(atom);
+				break;
+			case AtomSet::DIV:
+				gen(atom);
+				break;
+			case AtomSet::EXP:
+				gen(atom);
+				break;
+			case AtomSet::JUMPSAVE:
+				isGoto = true;
+				isJumpSave = true;
+				ss << "goto m" << *(int*)(atom.ptr1->getValue());
+				program.push_back(ss.str());
+				break;
+			case AtomSet::RETURNJUMP:
+				if (!rLabel.empty()) {
+					isGoto = true;
+					ss << "goto m" << rLabel.front();
+					rLabel.pop_front();
+					program.push_back(ss.str());
+				}
+				break;
+			case AtomSet::JUMP:
+				if (!isFor) {
+					ss << "goto m" << *(int*)(atom.ptr1->getValue());
+					program.push_back(ss.str());
+				}
+				isFor = 0;
+				break;
+			case AtomSet::CONDJUMP:
+				ss << "if (";
+				if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+					ss << ((Variable*)(atom.ptr1->getValue()))->value;
+				}
+				else {
+					ss << ((Variable*)(atom.ptr1->getValue()))->name;
+				}
+				switch (*(int*)(atom.ptr3->getValue()))
+				{
+				case 1: ss << " == "; break;
+				case 2: ss << " < "; break;
+				case 3: ss << " > "; break;
+				case 4: ss << " <= "; break;
+				case 5: ss << " >= "; break;
+				case 6: ss << " != "; break;
+				}
+				if (((Variable*)(atom.ptr2->getValue()))->isConst) {
+					ss << ((Variable*)(atom.ptr2->getValue()))->value;
+				}
+				else {
+					ss << ((Variable*)(atom.ptr2->getValue()))->name;
+				}
+				ss << ") goto m" << *(int*)(atom.ptr4->getValue());
+				isIf = true;
+				program.push_back(ss.str());
+				break;
+			case AtomSet::SAVE:
+				if (((Variable*)(atom.ptr1->getValue()))->isConst) {
+					ss << ((Variable*)(atom.ptr1->getValue()))->value;
+				}
+				else {
+					ss << ((Variable*)(atom.ptr1->getValue()))->name;
+				}
+				program.push_back(ss.str());
+				break;
+			case AtomSet::TEST:
+				tmp = program.back();
+				program.pop_back();
+				tmp2 = program.back();
+				program.pop_back();
+				ss << "for(" << program.back() << "; " << ((Variable*)(atom.ptr1->getValue()))->name << " != " << tmp2 << "; ";
+				ss << ((Variable*)(atom.ptr1->getValue()))->name << " = " << ((Variable*)(atom.ptr1->getValue()))->name << " + " << tmp << ") {";
+				program.pop_back();
+				program.push_back(ss.str());
+				break;
+			case AtomSet::INCR:
+				isFor = true;
+				program.push_back(";}");
+				break;
+			case AtomSet::FINIS:
+				ss << "return 0; }";
+				program.push_back(ss.str());
+				break;
+			default:
+				break;
+			}
+		}
+
+		for (string s : program) {
+			out << s;
+		}
+
+		cout << endl << "Translation complete";
+	}
+};
+
 int main() {
 	Parser p;
 	p.parse("f.txt");
 
 	SyntexAnalyzer sa;
 	sa.parse();
+
+	CodeGenerator cd;
+	cd.generate(0);
 }
