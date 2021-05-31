@@ -1691,7 +1691,6 @@ public:
 	}
 
 	void generate(bool status) {
-		if (status) return;
 		for (Atom atom : AtomList) {
 			stringstream ss;
 			string tmp;
@@ -1843,7 +1842,12 @@ public:
 			out << s;
 		}
 
-		cout << endl << "Translation complete";
+		if (statusError) {
+			cout << endl << "TRANSLATAION MAY CONTAIN ERRORS" << endl;
+		}
+		else {
+			cout << endl << "Translation complete" << endl;
+		}
 	}
 };
 
@@ -1855,5 +1859,5 @@ int main() {
 	sa.parse();
 
 	CodeGenerator cd;
-	cd.generate(0);
+	cd.generate(statusError);
 }
