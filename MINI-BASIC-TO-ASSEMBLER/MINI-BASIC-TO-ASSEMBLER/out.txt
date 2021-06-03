@@ -1,0 +1,266 @@
+.386
+.model flat, stdcall
+option casemap: none
+include \masm32\include\msvcrt.inc
+includelib \masm32\lib\msvcrt.lib
+
+.data
+format1 db "x = % d", 10, 0
+N dd ?
+M dd ?
+S dd ?
+X dd ?
+Y dd ?
+R dd ?
+T dd ?
+R1 dd ?
+A dd ?
+t1 dd ?
+t2 dd ?
+t3 dd ?
+t4 dd ?
+t5 dd ?
+t6 dd ?
+t7 dd ?
+t8 dd ?
+t9 dd ?
+t10 dd ?
+t11 dd ?
+e1 dd ?
+e2 dd ?
+e3 dd ?
+e4 dd ?
+
+.code
+start:
+
+l10:
+mov eax, 5
+mov N, eax
+
+l20:
+mov eax, 2
+mov M, eax
+
+l30:
+mov eax, N
+mov S, eax
+
+l40:
+call l55
+
+l50:
+jmp l120
+l55:
+mov eax, S
+cmp eax, 1
+je l320
+
+l60:
+mov eax, 2
+mov X, eax
+mov eax, S
+mov edx, 0
+mov ebx, 2
+div ebx
+mov t1, eax
+mov eax, t1
+mov e2, eax
+mov eax, 1
+mov e1, eax
+
+l9001:
+mov eax, e1
+cmp eax, 0
+jg greater1
+mov eax, X
+cmp eax, e2
+jl l9002
+jmp ld1
+greater1:
+mov eax, X
+cmp eax, e2
+jg l9002
+ld1:
+
+l70:
+mov eax, 2
+mov Y, eax
+mov eax, S
+mov edx, 0
+mov ebx, 2
+div ebx
+mov t2, eax
+mov eax, t2
+mov e4, eax
+mov eax, 1
+mov e3, eax
+
+l9003:
+mov eax, e3
+cmp eax, 0
+jg greater2
+mov eax, Y
+cmp eax, e4
+jl l9004
+jmp ld2
+greater2:
+mov eax, Y
+cmp eax, e4
+jg l9004
+ld2:
+
+l80:
+mov eax, Y
+mov ebx, X
+mul ebx
+mov t3, eax
+mov eax, t3
+cmp eax, S
+je l320
+
+l90:
+mov eax, Y
+add eax, e3
+mov Y, eax
+jmp l9003
+l9004:
+
+l100:
+mov eax, X
+add eax, e1
+mov X, eax
+jmp l9001
+l9002:
+
+l110:
+ret
+
+l120:
+mov eax, M
+mov S, eax
+
+l130:
+call l55
+
+l140:
+mov eax, N
+mov S, eax
+
+l150:
+call l170
+
+l160:
+jmp l260
+l170:
+mov eax, S
+mov edx, 0
+mov ebx, 2
+div ebx
+mov t5, eax
+mov eax, 2
+mov ebx, t5
+mul ebx
+mov t6, eax
+mov eax, S
+sub eax, t6
+mov t4, eax
+mov eax, t4
+mov R, eax
+
+l175:
+mov eax, S
+mov edx, 0
+mov ebx, 2
+div ebx
+mov t7, eax
+mov eax, t7
+mov S, eax
+
+l180:
+mov eax, S
+cmp eax, 0
+je l250
+
+l190:
+mov eax, S
+mov T, eax
+
+l200:
+mov eax, S
+mov edx, 0
+mov ebx, 2
+div ebx
+mov t8, eax
+mov eax, t8
+mov S, eax
+
+l210:
+mov eax, 2
+mov ebx, S
+mul ebx
+mov t10, eax
+mov eax, T
+sub eax, t10
+mov t9, eax
+mov eax, t9
+mov R1, eax
+
+l220:
+mov eax, R1
+cmp eax, R
+je l300
+
+l230:
+mov eax, R1
+mov R, eax
+
+l240:
+jmp l180
+l250:
+ret
+
+l260:
+mov eax, M
+mov S, eax
+
+l270:
+call l170
+
+l280:
+mov eax, 1
+mov A, eax
+
+l290:
+jmp l500
+l300:
+mov eax, 0
+mov A, eax
+
+l310:
+jmp l500
+l320:
+mov eax, 1
+neg eax
+mov t11, eax
+mov eax, t11
+mov A, eax
+
+l500:
+push A
+push offset format1
+call crt_printf
+add esp, 7
+ret
+exp proc
+mov eax, 1
+cycle:
+cmp ecx, 0
+jle stop
+mul ebx
+dec ecx
+jmp cycle
+stop: 
+ret
+exp endp
+end start
